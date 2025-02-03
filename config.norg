@@ -1,0 +1,136 @@
+@document.meta
+title: config
+description: 
+authors: giancarlo
+categories: 
+created: 2025-02-01T18:27:44-0600
+updated: 2025-02-02T15:35:11-0600
+version: 1.1.1
+tangle: [
+	./fnl/plugins/init.fnl
+	./lua/lazy.lua
+	]
+@end
+
+* IMPORTANT PROGRAMS TO LOAD FIRST
+** Package Manager
+   Bootstrap lazy.nvim
+   @code lua
+   -- Bootstrap lazy.nvim
+   local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+   if not (vim.uv or vim.loop).fs_stat(lazypath) then
+   local lazyrepo = "https://github.com/folke/lazy.nvim.git"
+           local out = vim.fn.system({ "git", "clone", "--filter=blob:none", "--branch=stable", lazyrepo, lazypath })
+           if vim.v.shell_error ~= 0 then
+                   vim.api.nvim_echo({
+                           { "Failed to clone lazy.nvim:\n", "ErrorMsg" },
+                           { out, "WarningMsg" },
+                           { "\nPress any key to exit..." },
+                   }, true, {})
+                   vim.fn.getchar()
+                   os.exit(1)
+           end
+   end
+   vim.opt.rtp:prepend(lazypath)
+
+        require("lazy").setup({
+        spec = {
+                   -- import your plugins
+                   { import = "plugins" },
+           }})
+   @end
+
+** Configure Settings
+   #tangle init.fnl
+   @code fennel
+   ;;; Options
+   (set vim.g.mapleader " ")
+   (set vim.g.maplocalleader ",")
+   (set vim.o.ignorecase true)
+   (set vim.o.smartcase true)
+   (set vim.o.splitright true)
+   (set vim.o.splitbelow true)
+   (set vim.o.foldenable false)
+   (set vim.o.undofile true)
+   (set vim.o.spell true)
+   (set vim.o.exrc true)
+   (set vim.o.expandtab true)
+   (set vim.o.tabstop 4)
+   
+   ;;; Mappings
+   
+   ;; Renamed <localleader> to ,
+   ;; This allows us to keep the , behaviour with a \ instead
+   (vim.keymap.set "n" "\\" ",")
+   
+   (vim.keymap.set "i" "jk" "<esc>")
+   (vim.keymap.set "n" "<leader>q" "<CMD>quit<CR>" {:desc ":quit"})
+   (vim.keymap.set "n" "\\" "<CMD>split<CR>" {:desc ":split"})
+   (vim.keymap.set "n" "|" "<CMD>vsplit<CR>" {:desc ":vsplit"})
+   
+   (vim.keymap.set "n" "<leader>sc" "<CMD>nohlsearch<CR>"
+     {:desc "Clear search highlight"})
+
+   (require :./lazy)
+   @end
+
+* Plugins
+  @code fennel
+        (macro tx [& args]
+        "Mixed sequential and associative tables at compile time. Because the Neovim ecosystem loves them but Fennel has no neat way to express them (which I think is fine, I don't like the idea of them in general)."
+        (let [to-merge (when (table? (. args (length args)))
+        (table.remove args))]
+        (if to-merge
+        (do
+        (each [key value (pairs to-merge)]
+        (tset args key value))
+        args)
+        args)))
+  
+        [
+        (tx "Olical/nfnl" {:ft "fennel"})
+  
+        (tx "NeogitOrg/neogit"
+            {:dependencies ["nvim-lua/plenary.nvim"        
+                            "sindrets/diffview.nvim"      
+                            "nvim-telescope/telescope.nvim"
+                            ]})
+                
+  
+        (tx "nvim-treesitter/nvim-treesitter"
+        {:main :nvim-treesitter.configs
+        :opts {:auto_install true
+        :highlight {:enable true}}})
+  
+        (tx "atweiden/vim-fennel")
+  
+        (tx "marko-cerovac/material.nvim"
+        {:opts {:plugins ["neorg" "which-key"]}
+        :config (fn [_ opts]
+        (let [material (require :material)]
+        (material.setup opts)
+        (set vim.g.material_style "deep ocean")
+        (vim.cmd "colorscheme material")))})
+  
+        (tx "nvim-neorg/neorg"
+     {:opts 
+       {:load
+         {:core.defaults {}
+          :core.concealer {}
+          :core.keybinds {}
+          }}
+      :config 
+      (fn [_ opts]
+        (let [neorg (require :neorg)
+              nfnl (require :nfnl.api)]
+        (neorg.setup opts)
+        (vim.api.nvim_create_user_command "NeorgTangleAndNfnlCompile" (fn [_]
+        (vim.cmd "Neorg tangle current-file")
+  
+          (nfnl.compile-all-files)
+        ) {})
+        ))})
+        ]
+   
+  @end
+
