@@ -7,7 +7,6 @@ vim.o.splitright = true
 vim.o.splitbelow = true
 vim.o.foldenable = false
 vim.o.undofile = true
-vim.o.spell = true
 vim.o.exrc = true
 vim.o.expandtab = true
 vim.o.tabstop = 4

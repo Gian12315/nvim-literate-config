@@ -7,7 +7,6 @@
 (set vim.o.splitbelow true)
 (set vim.o.foldenable false)
 (set vim.o.undofile true)
-(set vim.o.spell true)
 (set vim.o.exrc true)
 (set vim.o.expandtab true)
 (set vim.o.tabstop 4)

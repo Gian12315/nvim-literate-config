@@ -40,6 +40,7 @@
        {:core.defaults {}
         :core.concealer {}
         :core.keybinds {}
+        :core.export {}
         }}
     :config 
     (fn [_ opts]
@@ -52,5 +53,25 @@
         (nfnl.compile-all-files)
       ) {})
       ))})
+
+      (tx "williamboman/mason.nvim" {:opts {}})
+      (tx "williamboman/mason-lspconfig.nvim" {:opts {}})
+
+      (tx "saghen/blink.cmp"
+      { :version :*
+      :opts {
+      :keymap {:preset :default}
+      :appearance {:nerd_font_variant :mono}
+      }})
+
+      (tx "neovim/nvim-lspconfig"
+      {:dependencies ["saghen/blink.cmp"]
+      :opts {:servers {:pyright {}}}
+      :config (fn [_ opts]
+
+      (local lspconfig (require :lspconfig))
+         (each [server config (pairs opts.servers)]
+           (set config.capabilities
+                ((. (require :blink.cmp) :get_lsp_capabilities) config.capabilities))
+      ((. lspconfig server :setup) config)))})
       ]
- 

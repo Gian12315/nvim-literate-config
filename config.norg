@@ -4,7 +4,7 @@ description:
 authors: giancarlo
 categories: 
 created: 2025-02-01T18:27:44-0600
-updated: 2025-02-02T15:35:11-0600
+updated: 2025-02-06T23:02:02-0600
 version: 1.1.1
 tangle: [
 	./fnl/plugins/init.fnl
@@ -38,6 +38,7 @@ tangle: [
                    -- import your plugins
                    { import = "plugins" },
            }})
+
    @end
 
 ** Configure Settings
@@ -52,7 +53,6 @@ tangle: [
    (set vim.o.splitbelow true)
    (set vim.o.foldenable false)
    (set vim.o.undofile true)
-   (set vim.o.spell true)
    (set vim.o.exrc true)
    (set vim.o.expandtab true)
    (set vim.o.tabstop 4)
@@ -118,6 +118,7 @@ tangle: [
          {:core.defaults {}
           :core.concealer {}
           :core.keybinds {}
+          :core.export {}
           }}
       :config 
       (fn [_ opts]
@@ -130,7 +131,27 @@ tangle: [
           (nfnl.compile-all-files)
         ) {})
         ))})
+  
+        (tx "williamboman/mason.nvim" {:opts {}})
+        (tx "williamboman/mason-lspconfig.nvim" {:opts {}})
+  
+        (tx "saghen/blink.cmp"
+        { :version :*
+        :opts {
+        :keymap {:preset :default}
+        :appearance {:nerd_font_variant :mono}
+        }})
+  
+        (tx "neovim/nvim-lspconfig"
+        {:dependencies ["saghen/blink.cmp"]
+        :opts {:servers {:pyright {}}}
+        :config (fn [_ opts]
+  
+        (local lspconfig (require :lspconfig))
+           (each [server config (pairs opts.servers)]
+             (set config.capabilities
+                  ((. (require :blink.cmp) :get_lsp_capabilities) config.capabilities))
+        ((. lspconfig server :setup) config)))})
         ]
-   
   @end
 
